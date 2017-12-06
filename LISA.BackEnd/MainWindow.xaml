@@ -6,5 +6,6 @@
         xmlns:local="clr-namespace:LISA.BackEnd"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid/>
+
+    <Button>Ceci est un bouton</Button>
 </Window>
