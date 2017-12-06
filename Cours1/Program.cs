@@ -12,5 +12,11 @@ namespace Cours1
         {
 
         }
+
+        private static void ImportXMLFile(string filePath)
+        {
+            Console.WriteLine("Import du fichier : " + filePath);
+            //Console.WriteLine($"Import du fichier : {filePath}");
+        }
     }
 }
