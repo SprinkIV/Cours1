@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LISA.CatalogImport", "Cours1\LISA.CatalogImport.csproj", "{9CBC69F3-1E8D-4083-87B4-786FA1F96C67}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LISA.Backend", "LISA.BackEnd\LISA.Backend.csproj", "{C1025927-CA42-48C1-8BB4-D1215390D9A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{9CBC69F3-1E8D-4083-87B4-786FA1F96C67}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CBC69F3-1E8D-4083-87B4-786FA1F96C67}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CBC69F3-1E8D-4083-87B4-786FA1F96C67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1025927-CA42-48C1-8BB4-D1215390D9A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1025927-CA42-48C1-8BB4-D1215390D9A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1025927-CA42-48C1-8BB4-D1215390D9A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1025927-CA42-48C1-8BB4-D1215390D9A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
