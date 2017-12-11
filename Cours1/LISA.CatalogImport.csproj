@@ -48,5 +48,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LISA.DBLib\LISA.DBLib.csproj">
+      <Project>{0ce5a3b7-94e4-4fbe-a32d-8ffd191c0e7c}</Project>
+      <Name>LISA.DBLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
