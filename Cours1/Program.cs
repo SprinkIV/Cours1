@@ -1,9 +1,11 @@
-﻿using System;
+﻿using LISA.DBLib;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Cours1
 {
@@ -41,7 +43,7 @@ namespace Cours1
                             foreach (string file in xmlFiles)
                             {
                                 // Appeler la fonction ImportXMLFile pour chaque fichier "*.xml"
-                                ImportXMLFile($"directory\\{file}");
+                                ImportXMLFile(file);
                             }
                         }
                         else
@@ -78,6 +80,136 @@ namespace Cours1
         {
             Console.WriteLine("Import du fichier : " + filePath);
             //Console.WriteLine($"Import du fichier : {filePath}");
+
+            try
+            {
+                using (LISAEntities entities = new LISAEntities())
+                {
+                    entities.Database.Connection.Open();
+                    XDocument document = XDocument.Load(filePath);
+
+                    foreach (XElement element in document.Descendants(XName.Get("operation")))
+                    {
+                        Operation operation = ParseOperationElement(element, entities);
+                    }
+                    entities.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Impossible d'importer le fichier {filePath + Environment.NewLine + ex.Message}");
+            }
+
+            #region Exo : Ajout opération, catalogue, page
+            ////Créer la chaine de connexion
+            //using (LISAEntities entities = new LISAEntities())
+            //{
+            //    entities.Operations.ToList().ForEach(o => entities.Operations.Remove(o));
+            //    entities.Catalogues.ToList().ForEach(c => entities.Catalogues.Remove(c));
+            //    entities.Pages.ToList().ForEach(p => entities.Pages.Remove(p));
+            //    //Créer une opération
+            //    Operation op = new Operation
+            //    {
+            //        Code = "Je suis le code de l'opération",
+            //        Titre = "Je suis le titre de l'opération",
+            //        DateDebut = DateTime.Now,
+            //        DateFin = DateTime.Now,
+            //        Catalogues = null                    
+            //    };
+
+            //    entities.Operations.Add(op);
+
+            //    //Créer un catalogue
+            //    Catalogue cat = new Catalogue
+            //    {
+            //        Hauteur = 500,
+            //        Largeur = 500,
+            //        Libelle = "Je suis le libelle du catalogue",
+            //        Type = "Je suis le type du catalogue",
+            //        Vitesse = "V3",
+            //        Operation = op                    
+            //    };
+
+            //    entities.Catalogues.Add(cat);
+
+            //    //Créer trois pages
+
+            //    List<Page> allPages = new List<Page>();
+            //    for (int i = 0; i < 10; i++)
+            //    {
+            //        Page page = new Page()
+            //        {
+            //            Numero = i,
+            //            Catalogue = cat
+            //        };
+            //        allPages.Add(page);
+            //    }
+
+            //    //Page page1 = new Page()
+            //    //{
+            //    //    Numero = 1,
+            //    //    Catalogue = cat
+            //    //};
+
+            //    //Page page2 = new Page()
+            //    //{
+            //    //    Numero = 2,
+            //    //    Catalogue = cat
+            //    //};
+
+            //    //Page page3 = new Page()
+            //    //{
+            //    //    Numero = 3,
+            //    //    Catalogue = cat
+            //    //};
+
+            //    //entities.Pages.Add(page1);
+            //    //entities.Pages.Add(page2);
+            //    //entities.Pages.Add(page3);
+
+            //    foreach (Page page in allPages)
+            //    {
+            //        entities.Pages.Add(page);
+            //    }
+            #endregion
+            }
+
+        private static Operation ParseOperationElement(XElement operationElement, LISAEntities entities)
+        {
+            Operation result = null;
+            // Récupérer les données de l'opération dans le fichier XML
+            long operationId = long.Parse(operationElement.Attribute(XName.Get("id")).Value);
+            string operationCode = operationElement.Element(XName.Get("code")).Value;
+            string operationTitle = operationElement.Element(XName.Get("title")).Value;
+            DateTime operationStartDateTime = UnixTimeStampToDateTime(double.Parse(operationElement.Element(XName.Get("startDate")).Value));
+            DateTime operationEndDateTime = UnixTimeStampToDateTime(double.Parse(operationElement.Element(XName.Get("endDate")).Value));
+
+            // Vérifier si l'opération n'existe pas déjà en base
+            result = entities.Operations.FirstOrDefault(o => o.ImportId == operationId);
+
+            // Créer l'opération
+            if (result != null)
+            {
+                entities.Operations.Remove(result);
+            }
+
+            result = new Operation()
+                {
+                    ImportId = operationId,
+                    Code = operationCode,
+                    Titre = operationTitle,
+                    DateDebut = operationStartDateTime,
+                    DateFin = operationEndDateTime
+                };
+
+            entities.Operations.Add(result);
+
+            return result;
+        }
+
+        private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            return (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixTimeStamp).ToLocalTime());
         }
     }
 }
