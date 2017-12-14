@@ -19,23 +19,26 @@ namespace Cours1
 
         static void Main(string[] args)
         {
-            // Affiche les arguments
+
+            // Exécute le programme si les arguments sont correct
             if (args.Length == 2 && args[0] == ARGS_DIRECTORY)
             {
+                // Affiche les arguments
                 for (int i = 0; i < args.Length; i++)
                 {
                     Console.WriteLine(args[i]);
                 }
 
-                //Vérifier que le dossier existe. Afficher un message d'erreur si ce n'est pas le cas
+                //Vérifie que le dossier existe. Affiche un message d'erreur si ce n'est pas le cas
                 if (Directory.Exists(args[1]))
                 {
-                    // Lister les sous-dossier. Un sous-dossier pour un lot d'import
+                    // Liste les sous-dossier
                     IEnumerable<string> allDirectorys = Directory.EnumerateDirectories(args[1], "*", SearchOption.TopDirectoryOnly);
 
-                    // Rechercher dans chaque sous-dossier qu'il existe un fichier "*.xml". Afficher une erreur si ce n'est pas le cas
+                    // Recherche dans chaque sous-dossier qu'il existe un fichier "*.xml". Affiche une erreur si ce n'est pas le cas
                     foreach (string directory in allDirectorys)
                     {
+                        // Liste les fichiers *.xml
                         IEnumerable<string> xmlFiles = Directory.EnumerateFiles(directory, "*.xml", SearchOption.TopDirectoryOnly);
 
                         if (xmlFiles.Count() != 0)
@@ -56,7 +59,7 @@ namespace Cours1
             }
             else
             {
-                displayHelp();
+                DisplayHelp();
             }
 #if DEBUG
             Console.WriteLine("Appuyer pour continuer...");
@@ -67,7 +70,7 @@ namespace Cours1
         /// <summary>
         /// Affiche la documentation du <see cref="Program"/>
         /// </summary>
-        private static void displayHelp()
+        private static void DisplayHelp()
         {
             Console.WriteLine("Arguments :");
             Console.WriteLine("-d <Dossier à vérifier> : Précise le dossier à vérifier pour l'import");
@@ -76,6 +79,10 @@ namespace Cours1
         // Les lignes de codes dans le if seront éxécuté si le programme est en mode debug uniquement.
         }
 
+        /// <summary>
+        /// Importe les données du fichier XML et les enregistre en base de données
+        /// </summary>
+        /// <param name="filePath">Chemin du fichier XML</param>
         private static void ImportXMLFile(string filePath)
         {
             Console.WriteLine("Import du fichier : " + filePath);
@@ -85,12 +92,44 @@ namespace Cours1
             {
                 using (LISAEntities entities = new LISAEntities())
                 {
+                    // Ouvre la connexion vers la base de donnée
                     entities.Database.Connection.Open();
                     XDocument document = XDocument.Load(filePath);
 
-                    foreach (XElement element in document.Descendants(XName.Get("operation")))
+                    // Boucle sur les opérations du fichier XML
+                    foreach (XElement operationElement in document.Descendants(XName.Get("operation")))
                     {
-                        Operation operation = ParseOperationElement(element, entities);
+                        Operation operation = ParseOperationElement(operationElement, entities);
+
+                        // Boucle sur les catalogue du fichier XML
+                        foreach (XElement catalogElement in operationElement.Elements(XName.Get("catalog")))
+                        {
+                            Catalogue catalog = ParseCatalogElement(catalogElement, entities, operation);
+
+                            // Boucle sur les magasins du fichier XML
+                            foreach (XElement shopElement in catalogElement.Elements(XName.Get("shops")).Elements())
+                            {
+                                Magasin shop = ParseShopElement(shopElement, entities);
+                                ParseShopCatalogElement(shopElement, entities, catalog, shop);
+                            }
+
+                            // Boucle sur les pages du fichier XML
+                            foreach (XElement pageElement in catalogElement.Elements(XName.Get("pages")).Elements())
+                            {
+                                Page page = ParsePageElement(pageElement, entities, catalog);
+
+                                foreach (XElement articleElement in pageElement.Elements(XName.Get("products")).Elements())
+                                {
+                                    Article article = ParseArticleElement(articleElement, entities, pageElement);
+
+                                    PageArticle pageArticle = ParsePageArticleElement(articleElement, entities, page, article);
+
+                                    PrixCatalogueArticle prixCatalogueArticle = ParsePrixCatalogueArticleElement(articleElement, entities, catalog, article);
+
+
+                                }
+                            }
+                        }
                     }
                     entities.SaveChanges();
                 }
@@ -174,6 +213,269 @@ namespace Cours1
             #endregion
             }
 
+        /// <summary>
+        /// Importe un #<see cref="PrixCatalogueArticle"/> du fichier XML et l'enregistre dans la base de donnée. Si la PrixCatalogueArticle
+        /// importée est déjà en base de données, la supprime et la restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="articleElement">XElement article</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="catalog">Catalogue en liaison avec PrixCatalogueArticle</param>
+        /// <param name="article">Article en liaison avec PrixCatalogueArticle</param>
+        /// <returns>Retourne le PrixCatalogueArticle importé</returns>
+        private static PrixCatalogueArticle ParsePrixCatalogueArticleElement(XElement articleElement, LISAEntities entities, Catalogue catalog, Article article)
+        {
+            decimal.TryParse(articleElement.Element(XName.Get("price")).Value, out decimal prixCatalogueArticlePrix);
+            decimal.TryParse(articleElement.Element(XName.Get("price_before_coupon")).Value, out decimal prixCatalogueArticlePrixAvantCoupon);
+            decimal.TryParse(articleElement.Element(XName.Get("price_crossed")).Value, out decimal prixCatalogueArticlePrixAvantCroise);
+            decimal.TryParse(articleElement.Element(XName.Get("Reduction_euro")).Value, out decimal prixCatalogueArticleReductionEuro);
+            decimal.TryParse(articleElement.Element(XName.Get("Reduction_percent")).Value, out decimal prixCatalogueArticleReductionPourcent);
+            decimal.TryParse(articleElement.Element(XName.Get("Avantage_euro")).Value, out decimal prixCatalogueArticleAvantageEuro);
+            decimal.TryParse(articleElement.Element(XName.Get("Avantage_percent")).Value, out decimal prixCatalogueArticleAvantagePourcent);
+            decimal.TryParse(articleElement.Element(XName.Get("ecotaxe")).Value, out decimal prixCatalogueArticleEcotaxe);
+
+            PrixCatalogueArticle result = entities.PrixCatalogueArticles.FirstOrDefault(p => p.IdArticle == article.Id && p.IdCatalogue == catalog.Id);
+
+            if (result != null)
+            {
+                entities.PrixCatalogueArticles.Remove(result);
+            }
+
+            result = new PrixCatalogueArticle()
+            {
+                Prix = prixCatalogueArticlePrix,
+                PrixAvantCoupon = prixCatalogueArticlePrixAvantCoupon,
+                PrixAvantCroise = prixCatalogueArticlePrixAvantCroise,
+                ReductionEuro = prixCatalogueArticleReductionEuro,
+                ReductionPourcent = prixCatalogueArticleReductionPourcent,
+                AvantageEuro = prixCatalogueArticleAvantageEuro,
+                AvantagePourcent = prixCatalogueArticleAvantagePourcent,
+                Ecotaxe = prixCatalogueArticleEcotaxe,
+                Article = article,
+                Catalogue = catalog
+            };
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe une #<see cref="PageArticle"/> du fichier XML et l'enregistre dans la base de donnée. Si la PageArticle importée est déjà en base de données,
+        /// la supprime et la restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="articleElement">XElement de article</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="page">Page en liaison avec la PageArticle</param>
+        /// <param name="article">Article en liaison avec la PageArticle</param>
+        /// <returns>Retourne la PageArticle importée</returns>
+        private static PageArticle ParsePageArticleElement(XElement articleElement, LISAEntities entities, Page page, Article article)
+        {
+            int pageArticleCoordX = int.Parse(articleElement.Element(XName.Get("zones")).Element(XName.Get("zone")).Element(XName.Get("coordx")).Value);
+            int pageArticleCoordY = int.Parse(articleElement.Element(XName.Get("zones")).Element(XName.Get("zone")).Element(XName.Get("coordy")).Value);
+            int pageArticleWidth = int.Parse(articleElement.Element(XName.Get("zones")).Element(XName.Get("zone")).Element(XName.Get("width")).Value);
+            int pageArticleHeight = int.Parse(articleElement.Element(XName.Get("zones")).Element(XName.Get("zone")).Element(XName.Get("height")).Value);
+
+            PageArticle result = entities.PageArticles.FirstOrDefault(p => p.IdPage == page.Id && p.IdArticle == article.Id);
+
+            if (result != null)
+            {
+                entities.PageArticles.Remove(result);
+            }
+
+            result = new PageArticle()
+            {
+                Article = article,
+                Page = page,
+                ZoneCoordonnéesX = pageArticleCoordX,
+                ZoneCoordonnéesY = pageArticleCoordY,
+                ZoneHauteur = pageArticleHeight,
+                ZoneLargeur = pageArticleWidth
+            };
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe une #<see cref="Article"/> du fichier XML et l'enregistre dans la base de donnée. Si l'article importé est déjà en base de données,
+        /// le supprime et le restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="articleElement">Element de article</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="pageElement">Element de page</param>
+        /// <returns>Retourne l'article importé</returns>
+        private static Article ParseArticleElement(XElement articleElement, LISAEntities entities, XElement pageElement)
+        {
+            int articleId = int.Parse(articleElement.Attribute(XName.Get("id")).Value);
+            string articleCode = articleElement.Element(XName.Get("code")).Value;
+            string articleLibelle = articleElement.Element(XName.Get("label")).Value;
+            string articleDescription = articleElement.Element(XName.Get("description")).Value;
+            short articleQuantite = 1;
+            string articleUnite = articleElement.Element(XName.Get("packaging")).Value;
+
+            Article result = entities.Articles.FirstOrDefault(p => p.ImportId == articleId);
+
+            if (result != null)
+            {
+                entities.Articles.Remove(result);
+            }
+
+            result = new Article()
+            {
+                ImportId = articleId,
+                Code = articleCode,
+                Libelle = articleLibelle,
+                Description = articleDescription,
+                Quantite = articleQuantite,
+                Unite = articleUnite
+            };
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe une #<see cref="Page"/> du fichier XML et l'enregistre dans la base de donnée. Si la page importée est déjà en base de données,
+        /// la supprime et la restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="pageElement">XElement de page</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="catalog">Catalogue en liaison avec la page</param>
+        /// <returns>Retourne la page importée</returns>
+        private static Page ParsePageElement(XElement pageElement, LISAEntities entities, Catalogue catalog)
+        {
+            int pageId = int.Parse(pageElement.Attribute(XName.Get("id")).Value);
+            int pageNum = int.Parse(pageElement.Element(XName.Get("number")).Value);
+
+            Page result = entities.Pages.FirstOrDefault(p => p.ImportId == pageId);
+
+            if (result != null)
+            {
+                entities.Pages.Remove(result);
+            }
+
+            result = new Page()
+            {
+                ImportId = pageId,
+                Numero = pageNum,
+                Catalogue = catalog,
+            };
+
+            entities.Pages.Add(result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe un #<see cref="MagasinCatalogue"/> du fichier XML. Si le MagasinCatalogue est déjà en base de données,
+        /// le supprime et le restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="shopElement">Element de magasin</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="catalog">Catalogue en liaison avec la table MagasinCatalogue</param>
+        /// <param name="shop">Magasin en liaison avec la table MagasinCatalogue</param>
+        private static MagasinCatalogue ParseShopCatalogElement(XElement shopElement, LISAEntities entities, Catalogue catalog, Magasin shop)
+        {
+            DateTime shopStartdate = UnixTimeStampToDateTime(double.Parse(shopElement.Element(XName.Get("startDate")).Value));
+            DateTime shopDisplaystartdate = UnixTimeStampToDateTime(double.Parse(shopElement.Element(XName.Get("displayStartDate")).Value));
+            DateTime shopDisplayenddate = UnixTimeStampToDateTime(double.Parse(shopElement.Element(XName.Get("displayEndDate")).Value));
+
+
+            MagasinCatalogue result = entities.MagasinCatalogues.FirstOrDefault(c => c.IdCatalogue == catalog.ImportId && c.IdMagasin == shop.Id);
+
+            if (result != null)
+            {
+                entities.MagasinCatalogues.Remove(result);
+            }
+
+            result = new MagasinCatalogue()
+            {
+                DateDebut = shopDisplaystartdate,
+                DateFin = shopDisplayenddate,
+                Catalogue = catalog,
+                Magasin = shop
+            };
+
+            entities.MagasinCatalogues.Add(result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe un #<see cref="Magasin"/> du fichier XML. Si le magasin est déjà en base de données,
+        /// le supprime et le restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="shopElement">Element de magasin</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="catalog">Element de catalogue</param>
+        /// <returns>Retourne le magasin ajouté</returns>
+        private static Magasin ParseShopElement(XElement shopElement, LISAEntities entities)
+        {
+            long shopId = long.Parse(shopElement.Attribute(XName.Get("id")).Value);
+
+            Magasin result = entities.Magasins.FirstOrDefault(c => c.ImportId == shopId);
+
+            if (result != null)
+            {
+                entities.Magasins.Remove(result);
+            }
+
+            result = new Magasin()
+            {
+                ImportId = shopId,
+                Libelle = shopId.ToString()
+            };
+
+            entities.Magasins.Add(result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe un #<see cref="Catalogue"/> du fichier XML et l'enregistre dans la base de donnée. Si le catalogue est déjà en base de données,
+        /// le supprime et le restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="catalogElement">Element de catalogue</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <param name="operation">Element d'opération</param>
+        /// <returns>Retourne le catalogue importé.</returns>
+        private static Catalogue ParseCatalogElement(XElement catalogElement, LISAEntities entities, Operation operation)
+        {
+            Catalogue result = null;
+
+            long catalogId = long.Parse(catalogElement.Attribute(XName.Get("id")).Value);
+            string catalogType = catalogElement.Element(XName.Get("type")).Value;
+            string catalogLabel = catalogElement.Element(XName.Get("label")).Value;
+            string catalogSpeed = catalogElement.Element(XName.Get("speed")).Value;
+            int catalogWidth = int.Parse(catalogElement.Element(XName.Get("catalogWidth")).Value);
+            int catalogHeight = int.Parse(catalogElement.Element(XName.Get("catalogHeight")).Value);
+
+            result = entities.Catalogues.FirstOrDefault(c => c.ImportId == catalogId);
+
+            if (result != null)
+            {
+                entities.Catalogues.Remove(result);
+            }
+
+            result = new Catalogue()
+            {
+                ImportId = catalogId,
+                Type = catalogType,
+                Libelle = catalogLabel,
+                Vitesse = catalogSpeed,
+                Largeur = catalogWidth,
+                Hauteur = catalogHeight,
+                Operation = operation
+            };
+
+            entities.Catalogues.Add(result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Importe une <see cref="Operation"/> du fichier XML et l'enregistre dans la base de données. Si l'opération est déjà en base de données,
+        /// la supprime et la restaure avec les nouvelles données.
+        /// </summary>
+        /// <param name="operationElement">XElement d'opération</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <returns>Retourne l'operation importée</returns>
         private static Operation ParseOperationElement(XElement operationElement, LISAEntities entities)
         {
             Operation result = null;
@@ -194,13 +496,13 @@ namespace Cours1
             }
 
             result = new Operation()
-                {
-                    ImportId = operationId,
-                    Code = operationCode,
-                    Titre = operationTitle,
-                    DateDebut = operationStartDateTime,
-                    DateFin = operationEndDateTime
-                };
+            {
+                ImportId = operationId,
+                Code = operationCode,
+                Titre = operationTitle,
+                DateDebut = operationStartDateTime,
+                DateFin = operationEndDateTime
+            };
 
             entities.Operations.Add(result);
 
