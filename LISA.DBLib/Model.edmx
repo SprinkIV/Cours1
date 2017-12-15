@@ -475,7 +475,7 @@
           <NavigationProperty Name="Catalogue" Relationship="Self.FK_MagasinCatalogue_Catalogue" FromRole="MagasinCatalogue" ToRole="Catalogue" />
           <NavigationProperty Name="Magasin" Relationship="Self.FK_MagasinCatalogue_Magasin" FromRole="MagasinCatalogue" ToRole="Magasin" />
         </EntityType>
-        <EntityType Name="Medium">
+        <EntityType Name="Media">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -588,7 +588,7 @@
           <End Role="Article" Type="Self.Article" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
-          <End Role="Media" Type="Self.Medium" Multiplicity="*" />
+          <End Role="Media" Type="LISAModel.Media" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Article">
               <PropertyRef Name="Id" />
@@ -708,7 +708,7 @@
         </Association>
         <Association Name="FK_Media_TypeMedia">
           <End Role="TypeMedia" Type="Self.TypeMedia" Multiplicity="1" />
-          <End Role="Media" Type="Self.Medium" Multiplicity="*" />
+          <End Role="Media" Type="LISAModel.Media" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="TypeMedia">
               <PropertyRef Name="Id" />
@@ -740,7 +740,7 @@
           <EntitySet Name="Categories" EntityType="Self.Categorie" />
           <EntitySet Name="Magasins" EntityType="Self.Magasin" />
           <EntitySet Name="MagasinCatalogues" EntityType="Self.MagasinCatalogue" />
-          <EntitySet Name="Media" EntityType="Self.Medium" />
+          <EntitySet Name="Media1" EntityType="LISAModel.Media" />
           <EntitySet Name="Operations" EntityType="Self.Operation" />
           <EntitySet Name="Pages" EntityType="Self.Page" />
           <EntitySet Name="PageArticles" EntityType="Self.PageArticle" />
@@ -757,7 +757,7 @@
           </AssociationSet>
           <AssociationSet Name="FK_Media_Article" Association="Self.FK_Media_Article">
             <End Role="Article" EntitySet="Articles" />
-            <End Role="Media" EntitySet="Media" />
+            <End Role="Media" EntitySet="Media1" />
           </AssociationSet>
           <AssociationSet Name="FK_PageArticle_Article" Association="Self.FK_PageArticle_Article">
             <End Role="Article" EntitySet="Articles" />
@@ -793,7 +793,7 @@
           </AssociationSet>
           <AssociationSet Name="FK_Media_TypeMedia" Association="Self.FK_Media_TypeMedia">
             <End Role="TypeMedia" EntitySet="TypeMedias" />
-            <End Role="Media" EntitySet="Media" />
+            <End Role="Media" EntitySet="Media1" />
           </AssociationSet>
           <AssociationSet Name="FK_PageArticle_Page" Association="Self.FK_PageArticle_Page">
             <End Role="Page" EntitySet="Pages" />
@@ -880,8 +880,8 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Media">
-            <EntityTypeMapping TypeName="LISAModel.Medium">
+          <EntitySetMapping Name="Media1">
+            <EntityTypeMapping TypeName="LISAModel.Media">
               <MappingFragment StoreEntitySet="Media">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="IdTypeMedia" ColumnName="IdTypeMedia" />

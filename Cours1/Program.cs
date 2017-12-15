@@ -1,6 +1,8 @@
 ﻿using LISA.DBLib;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -96,6 +98,8 @@ namespace Cours1
                     entities.Database.Connection.Open();
                     XDocument document = XDocument.Load(filePath);
 
+                    ParseTypeMedia(entities);
+
                     // Boucle sur les opérations du fichier XML
                     foreach (XElement operationElement in document.Descendants(XName.Get("operation")))
                     {
@@ -120,13 +124,17 @@ namespace Cours1
 
                                 foreach (XElement articleElement in pageElement.Elements(XName.Get("products")).Elements())
                                 {
-                                    Article article = ParseArticleElement(articleElement, entities, pageElement);
+                                    Categorie categorie = ParseCategorieElement(articleElement, entities);
+
+                                    Article article = ParseArticleElement(articleElement, entities, pageElement, categorie);
+
+                                    ParseMediumPictoElement(articleElement, entities, article);
+
+                                    //ParseMediumImageElement(articleElement, entities, article);
 
                                     PageArticle pageArticle = ParsePageArticleElement(articleElement, entities, page, article);
 
                                     PrixCatalogueArticle prixCatalogueArticle = ParsePrixCatalogueArticleElement(articleElement, entities, catalog, article);
-
-
                                 }
                             }
                         }
@@ -213,6 +221,122 @@ namespace Cours1
             #endregion
             }
 
+        private static void ParseMediumImageElement(XElement articleElement, LISAEntities entities, Article article)
+        {
+            string cheminMedium = articleElement.Element(XName.Get("image")).Value;
+
+            TypeMedia typeMedia = entities.TypeMedias.FirstOrDefault(p => p.Libelle == "image");
+
+            Media result = entities.Medias.FirstOrDefault(p => p.IdArticle == article.Id && p.IdTypeMedia == typeMedia.Id);
+
+            if (result != null)
+            {
+                entities.Medias.Remove(result);
+            }
+
+            result = new Media()
+            {
+                Article = article,
+                TypeMedia = typeMedia,
+                Chemin = cheminMedium
+            };
+
+            entities.Medias.Add(result);
+        }
+
+
+        private static void ParseMediumPictoElement(XElement articleElement, LISAEntities entities, Article article)
+        {
+            string cheminMedium = articleElement.Element(XName.Get("picto")).Value;
+
+            TypeMedia typeMedia = entities.TypeMedias.FirstOrDefault(p => p.Libelle == "picto");
+
+            Media result = entities.Medias.FirstOrDefault(p => p.IdArticle == article.Id && p.IdTypeMedia == typeMedia.Id);
+
+            if (result != null)
+            {
+                entities.Medias.Remove(result);
+            }
+
+            result = new Media()
+            {
+                Article = article,
+                TypeMedia = typeMedia,
+                Chemin = cheminMedium
+            };
+
+            entities.Medias.Add(result);
+        }
+
+        /// <summary>
+        /// Créer les deux types médias picto et image si ils ne sont pas en DB
+        /// </summary>
+        /// <param name="entities">Gestionnaire DB</param>
+        private static void ParseTypeMedia(LISAEntities entities)
+        {
+            TypeMedia picto = entities.TypeMedias.FirstOrDefault(p => p.Libelle == "picto");
+
+            if (picto == null)
+            {
+                picto = new TypeMedia()
+                {
+                    Libelle = "picto"
+                };
+
+                entities.TypeMedias.Add(picto);
+            }
+
+            TypeMedia image = entities.TypeMedias.FirstOrDefault(p => p.Libelle == "image");
+
+            if (image == null)
+            {
+                image = new TypeMedia()
+                {
+                    Libelle = "image"
+                };
+
+                entities.TypeMedias.Add(image);
+            }
+        }
+
+        /// <summary>
+        /// Importe une #<see cref="Categorie"/> du fichier XML et l'enregistre dans la base de donnée.
+        /// Vérifie si la categorie n'a pas déjà été ajoutée dans le ChangeTracker.
+        /// </summary>
+        /// <param name="articleElement">XElement de article</param>
+        /// <param name="entities">Gestionnaire DB</param>
+        /// <returns>Renvois la catégorie</returns>
+        private static Categorie ParseCategorieElement(XElement articleElement, LISAEntities entities)
+        {
+            string libelleCategorie = articleElement.Element(XName.Get("category")).Value;
+
+            Categorie categorieInDB = entities.Categories.FirstOrDefault(p => p.Libelle == libelleCategorie);
+
+            Categorie result = null;
+
+            if (categorieInDB == null)
+            {
+                var categorieChangeTracker = entities.ChangeTracker.Entries<Categorie>().ToList().FirstOrDefault(c => c.State == EntityState.Added && c.Entity.Libelle == libelleCategorie);
+
+                if (categorieChangeTracker == null)
+                {
+                    if (result == null)
+                    {
+                        result = new Categorie()
+                        {
+                            Libelle = libelleCategorie
+                        };
+
+                        entities.Categories.Add(result);
+                    }
+                }
+                else
+                    result = categorieChangeTracker.Entity;
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Importe un #<see cref="PrixCatalogueArticle"/> du fichier XML et l'enregistre dans la base de donnée. Si la PrixCatalogueArticle
         /// importée est déjà en base de données, la supprime et la restaure avec les nouvelles données.
@@ -254,6 +378,8 @@ namespace Cours1
                 Catalogue = catalog
             };
 
+            entities.PrixCatalogueArticles.Add(result);
+
             return result;
         }
 
@@ -290,6 +416,8 @@ namespace Cours1
                 ZoneLargeur = pageArticleWidth
             };
 
+            entities.PageArticles.Add(result);
+
             return result;
         }
 
@@ -301,7 +429,7 @@ namespace Cours1
         /// <param name="entities">Gestionnaire DB</param>
         /// <param name="pageElement">Element de page</param>
         /// <returns>Retourne l'article importé</returns>
-        private static Article ParseArticleElement(XElement articleElement, LISAEntities entities, XElement pageElement)
+        private static Article ParseArticleElement(XElement articleElement, LISAEntities entities, XElement pageElement, Categorie categorie)
         {
             int articleId = int.Parse(articleElement.Attribute(XName.Get("id")).Value);
             string articleCode = articleElement.Element(XName.Get("code")).Value;
@@ -324,8 +452,11 @@ namespace Cours1
                 Libelle = articleLibelle,
                 Description = articleDescription,
                 Quantite = articleQuantite,
-                Unite = articleUnite
+                Unite = articleUnite,
+                Categorie = categorie
             };
+
+            entities.Articles.Add(result);
 
             return result;
         }

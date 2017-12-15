@@ -12,7 +12,7 @@
         <EntityTypeShape EntityType="LISAModel.Categorie" Width="1.5" PointX="8.5" PointY="7.5" IsExpanded="true" />
         <EntityTypeShape EntityType="LISAModel.Magasin" Width="1.5" PointX="2.375" PointY="6.375" IsExpanded="true" />
         <EntityTypeShape EntityType="LISAModel.MagasinCatalogue" Width="1.5" PointX="2.375" PointY="3.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="LISAModel.Medium" Width="1.5" PointX="8.5" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="LISAModel.Media" Width="1.5" PointX="8.5" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="LISAModel.Operation" Width="1.5" PointX="2.375" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="LISAModel.Page" Width="1.5" PointX="6.5" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="LISAModel.PageArticle" Width="1.5" PointX="6.5" PointY="3.5" IsExpanded="true" />

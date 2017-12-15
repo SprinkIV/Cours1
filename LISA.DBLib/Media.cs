@@ -12,7 +12,7 @@ namespace LISA.DBLib
     using System;
     using System.Collections.Generic;
     
-    public partial class Medium
+    public partial class Media
     {
         public long Id { get; set; }
         public long IdTypeMedia { get; set; }

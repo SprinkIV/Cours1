@@ -70,7 +70,7 @@
     <Compile Include="MagasinCatalogue.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
-    <Compile Include="Medium.cs">
+    <Compile Include="Media.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
     <Compile Include="Model.Context.cs">

@@ -18,7 +18,7 @@ namespace LISA.DBLib
         public Article()
         {
             this.ArticleAttributs = new HashSet<ArticleAttribut>();
-            this.Media = new HashSet<Medium>();
+            this.Media = new HashSet<Media>();
             this.PageArticles = new HashSet<PageArticle>();
             this.PrixCatalogueArticles = new HashSet<PrixCatalogueArticle>();
         }
@@ -36,7 +36,7 @@ namespace LISA.DBLib
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ArticleAttribut> ArticleAttributs { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Medium> Media { get; set; }
+        public virtual ICollection<Media> Media { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PageArticle> PageArticles { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

@@ -32,7 +32,7 @@ namespace LISA.DBLib
         public virtual DbSet<Categorie> Categories { get; set; }
         public virtual DbSet<Magasin> Magasins { get; set; }
         public virtual DbSet<MagasinCatalogue> MagasinCatalogues { get; set; }
-        public virtual DbSet<Medium> Media { get; set; }
+        public virtual DbSet<Media> Medias { get; set; }
         public virtual DbSet<Operation> Operations { get; set; }
         public virtual DbSet<Page> Pages { get; set; }
         public virtual DbSet<PageArticle> PageArticles { get; set; }

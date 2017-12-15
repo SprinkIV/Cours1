@@ -17,13 +17,13 @@ namespace LISA.DBLib
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public TypeMedia()
         {
-            this.Media = new HashSet<Medium>();
+            this.Media = new HashSet<Media>();
         }
     
         public long Id { get; set; }
         public string Libelle { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Medium> Media { get; set; }
+        public virtual ICollection<Media> Media { get; set; }
     }
 }
