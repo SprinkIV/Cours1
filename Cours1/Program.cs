@@ -244,7 +244,6 @@ namespace Cours1
             entities.Medias.Add(result);
         }
 
-
         private static void ParseMediumPictoElement(XElement articleElement, LISAEntities entities, Article article)
         {
             string cheminMedium = articleElement.Element(XName.Get("picto")).Value;

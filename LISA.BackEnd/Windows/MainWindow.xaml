@@ -1,0 +1,59 @@
+﻿<Window x:Class="LISA.BackEnd.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LISA.BackEnd"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <MenuItem Header="Fichier">
+                <MenuItem Header="Rafraîchir"/>
+                <MenuItem Header="Sauvegarder"/>
+                <Separator/>
+                <MenuItem Header="Quitter"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Menu principal de l'application -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*"/>
+                <ColumnDefinition Width="50*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Liste des magasins -->
+            <ListBox Grid.Column="0">
+                
+            </ListBox>
+
+            <!-- Partie formulaire d'un magasin -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Style="{StaticResource ColumnDefinitionFormDataLISAStyle}"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock  Grid.Row="0" Grid.Column="0" Text="Libellé :"   Style="{StaticResource TextBlockMandatoryLISAStyle}"/>
+                <TextBlock  Grid.Row="1" Grid.Column="0" Text="ID import :" Style="{StaticResource TextBlockLISAStyle}"/>
+
+                <TextBox    Grid.Row="0" Grid.Column="1"                    Style="{StaticResource TextBoxLISAStyle}"/>
+                <TextBox    Grid.Row="1" Grid.Column="1"                    Style="{StaticResource TextBoxLISAStyle}"/>
+
+            </Grid>
+        </Grid>
+    </Grid>
+ </Window>

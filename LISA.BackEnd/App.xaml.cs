@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LISA.DBLib;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,16 @@ namespace LISA.BackEnd
     /// </summary>
     public partial class App : Application
     {
+        #region Fields
+
+        private LISAEntities _Entities;
+
+        #endregion
+
+        #region Properties
+
+        public LISAEntities Entities => _Entities;
+
+        #endregion
     }
 }
